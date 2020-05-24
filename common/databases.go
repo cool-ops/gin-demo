@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cool-ops/gin-demo/model"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 	"log"
 )
 
@@ -11,16 +12,17 @@ var DB *gorm.DB
 
 // 初始化数据库
 func InitDB() *gorm.DB {
-	host := "localhost"
-	port := "3306"
-	username := "root"
-	password := "coolops@123456"
-	dbName := "user"
-	charSet := "utf8"
+	driverName := viper.GetString("db.dbDriver")
+	host := viper.GetString("db.host")
+	port := viper.GetString("db.port")
+	username := viper.GetString("db.username")
+	password := viper.GetString("db.password")
+	dbName := viper.GetString("db.dbName")
+	charSet := viper.GetString("db.charSet")
 	args := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local",
 		username, password, host,port,dbName, charSet,
 	)
-	db, err := gorm.Open("mysql", args)
+	db, err := gorm.Open(driverName, args)
 	if err != nil {
 		log.Println("connect to MySQL failed. err " + err.Error())
 	}

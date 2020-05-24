@@ -1,0 +1,10 @@
+server:
+  port: "8080"
+db:
+  dbDriver: "mysql"
+  host: "localhost"
+  port: "3306"
+  username: "root"
+  password: "coolops@123456"
+  dbName: "user"
+  charSet: "utf8"
