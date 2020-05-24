@@ -7,7 +7,20 @@ import (
 	"github.com/cool-ops/gin-demo/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/bcrypt"
+	"log"
+	"net/http"
 )
+
+func Info(ctx *gin.Context) {
+	user, _ := ctx.Get("user")
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": gin.H{
+			"user": user,
+		},
+	})
+}
 
 func Register(ctx *gin.Context) {
 	db := common.GetDB()
@@ -41,38 +54,57 @@ func Register(ctx *gin.Context) {
 		fmt.Println(name)
 	}
 	// 数据库中查找手机号是否存在，如果存在，则返回已注册
-	if isTelephoneExist(db,telephone){
-		ctx.JSON(422,gin.H{
-			"code":422,
-			"msg":"手机号码已被注册.",
+	if isTelephoneExist(db, telephone) {
+		ctx.JSON(422, gin.H{
+			"code": 422,
+			"msg":  "手机号码已被注册.",
 		})
 		return
 	}
 
+	// 密码加密
+	hasePassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		ctx.JSON(500, gin.H{
+			"code": 500,
+			"msg":  "密码加密失败.",
+		})
+		return
+	}
 	// 开始注册
 	newUser := model.User{
 		UserName:  name,
-		PassWord:  password,
+		PassWord:  string(hasePassword),
 		Telephone: telephone,
 	}
 	db.Create(&newUser)
+
+	// 生成token
+	token, err := common.GenerateToken(newUser)
+	if err != nil {
+		ctx.JSON(500, gin.H{
+			"code": 500,
+			"msg":  "系统错误",
+		})
+		log.Println("generate token failed. err : " + err.Error())
+		return
+	}
 	// 注册成功
 	ctx.JSON(200, gin.H{
-		"code":      200,
-		"name":      name,
-		"password":  password,
-		"telephone": telephone,
-		"msg":       "注册成功",
+		"code": 200,
+		"data": gin.H{
+			"token": token,
+		},
+		"msg": "注册成功",
 	})
 }
 
-
 // 判断手机号是否已经注册
-func isTelephoneExist(db *gorm.DB,telephone string)bool{
+func isTelephoneExist(db *gorm.DB, telephone string) bool {
 	var user model.User
 	db.Where("telephone = ?", telephone).First(&user)
 	if user.ID != 0 {
-		return  true
+		return true
 	}
 	return false
 }
