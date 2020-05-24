@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/cool-ops/gin-demo/common"
+	"github.com/cool-ops/gin-demo/dto"
 	"github.com/cool-ops/gin-demo/model"
 	"github.com/cool-ops/gin-demo/utils"
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ func Info(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"data": gin.H{
-			"user": user,
+			"user": dto.ToUserDTO(user.(model.User)),
 		},
 	})
 }
